@@ -1,6 +1,6 @@
 #Requires -RunAsAdministrator
 
-# Probably need a fix when someone has a different install location
+# TODO Probably need a fix when someone has a different install location
 $ProgramPaths = @{
   "Premiere Pro 2022"  = "Adobe Premiere Pro 2022\Adobe Premiere Pro.exe";
   "Premiere Pro 2023"  = "Adobe Premiere Pro 2023\Adobe Premiere Pro.exe";
@@ -22,7 +22,7 @@ $ProgramPaths = @{
 
 foreach ($program in $ProgramPaths.GetEnumerator()) {
   $programName = $program.Key
-  $programDir = "$($env:ProgramFiles)\$($program.Value)"
+  $programDir = "$($env:ProgramFiles)\Adobe\$($program.Value)"
 
   New-NetFirewallRule -DisplayName "Block $programName Connection" -Direction Inbound -Action Block -Program $programDir
   New-NetFirewallRule -DisplayName "Block $programName Connection" -Direction Outbound -Action Block -Program $programDir
