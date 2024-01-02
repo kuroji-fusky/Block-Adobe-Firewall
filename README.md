@@ -14,4 +14,4 @@ Just for good measure, execute this before running the script:
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
 ```
 
-PRs and issues are welcome!
+Idk about Macs though but PRs and issues are welcome!
