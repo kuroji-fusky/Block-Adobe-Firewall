@@ -6,8 +6,6 @@ $AdobeIPBlocklist = Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ru
 $AdobeIPBlocklist.Content
 
 # Probably need a fix when someone has a different install location
-$installRoot = $env:ProgramFiles
-
 $ProgramPaths = @{
   "Premiere Pro 2022"  = "Adobe Premiere Pro 2022\Adobe Premiere Pro.exe";
   "Premiere Pro 2023"  = "Adobe Premiere Pro 2023\Adobe Premiere Pro.exe";
@@ -28,5 +26,11 @@ $ProgramPaths = @{
 }
 
 foreach ($program in $ProgramPaths.GetEnumerator()) {
-  Write-Host "Blocked $($program.Key) from location: $installRoot/$($program.Value)"
+  $programName = $program.Key
+  $programDir = "$($env:ProgramFiles)\$($program.Value)"
+
+  New-NetFirewallRule -DisplayName "Block $programName Connection" -Direction Inbound -Action Block -Program $programDir
+  New-NetFirewallRule -DisplayName "Block $programName Connection" -Direction Outbound -Action Block -Program $programDir
+
+  Write-Host "Blocked $programName from location: $programDir"
 }
