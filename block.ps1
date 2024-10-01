@@ -1,8 +1,8 @@
 #Requires -RunAsAdministrator
 
 param (
-  [string]$baseInstallPath = $env:ProgramFiles,
-  [Parameter(Mandatory = $true)][boolean]$reset_flag
+  [Parameter(Mandatory = $true)][string]$BaseInstallPath = $env:ProgramFiles,
+  [Parameter(Mandatory = $true)][ValidateSet("All", "Firewall", "Rules")][string]$Reset
 )
 
 $ProgramPaths = @{
@@ -34,13 +34,14 @@ $ProgramPaths = @{
 
 foreach ($program in $ProgramPaths.GetEnumerator()) {
   $programName = $program.Key
-
-  # TODO Probably need a fix when someone has a different install location
-  $programDir = "$($baseInstallPath)\Adobe\$($program.Value)"
-
-  $fwDisplayName = "Block connections from $programName"
+  $programDir = "$($BaseInstallPath)\Adobe\$($program.Value)"
 
   # Verify if $programDir is valid and it exists; by default this should automatically pass if "$env:ProgramFiles" is set to default
+  if (!(Test-Path $programDir)) {
+    exit 1
+  }
+
+  $fwDisplayName = "Block connections from $programName"
 
   # Skip if the Firewall rule is already created and to prevent any dups
   if (!$(Get-NetFirewallRule -DisplayName $fwDisplayName -Direction Inbound)) {
