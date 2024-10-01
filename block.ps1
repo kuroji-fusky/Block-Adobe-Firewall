@@ -1,8 +1,11 @@
 #Requires -RunAsAdministrator
 
 param (
-  [Parameter(Mandatory = $true)][string]$BaseInstallPath = $env:ProgramFiles,
-  [Parameter(Mandatory = $true)][ValidateSet("All", "Firewall", "Rules")][string]$Reset
+  [string]$BaseInstallPath = $env:ProgramFiles,
+
+  [Parameter(ParameterSetName = "Reset")]
+  [ValidateSet("All", "Firewall", "Rules")]
+  [string]$ResetFlag
 )
 
 $ProgramPaths = @{
@@ -37,37 +40,37 @@ foreach ($program in $ProgramPaths.GetEnumerator()) {
   $programDir = "$($BaseInstallPath)\Adobe\$($program.Value)"
 
   # Verify if $programDir is valid and it exists; by default this should automatically pass if "$env:ProgramFiles" is set to default
-  if (!(Test-Path $programDir)) {
-    exit 1
+  if (Test-Path $programDir) {
+    continue
   }
 
   $fwDisplayName = "Block connections from $programName"
 
   # Skip if the Firewall rule is already created and to prevent any dups
-  if (!$(Get-NetFirewallRule -DisplayName $fwDisplayName -Direction Inbound)) {
+  if (!(Get-NetFirewallRule -DisplayName $fwDisplayName -Direction Inbound)) {
     New-NetFirewallRule -DisplayName $fwDisplayName -Direction Inbound -Action Block -Program $programDir
   }
   Write-Host "Inbound firewall rule: `"$fwDisplayName`" already added!"
   
-  if (!$(Get-NetFirewallRule -DisplayName $fwDisplayName -Direction Outbound)) {
+  if (!(Get-NetFirewallRule -DisplayName $fwDisplayName -Direction Outbound)) {
     New-NetFirewallRule -DisplayName $fwDisplayName -Direction Outbound -Action Block -Program $programDir
   }
   Write-Host "Outbound firewall rule: `"$fwDisplayName`" already added!"
 }
 
 # Get the hosts URL from https://github.com/Ruddernation-Designs/Adobe-URL-Block-List
-$BlockListRepository = "Ruddernation-Designs/Adobe-URL-Block-List"
+# $BlockListRepository = "Ruddernation-Designs/Adobe-URL-Block-List"
 
-$IPBlockListUrl = "https://raw.githubusercontent.com/$($BlockListRepository)/master/hosts"
-$AdobeIPBlocklist = $(Invoke-WebRequest -Uri $IPBlockListUrl).Content -split "[`r`n]"
+# $IPBlockListUrl = "https://raw.githubusercontent.com/$($BlockListRepository)/master/hosts"
+# $AdobeIPBlocklist = $(Invoke-WebRequest -Uri $IPBlockListUrl).Content -split "[`r`n]"
 
-$hostsFile = "$env:windir\System32\drivers\etc\hosts"
+# $hostsFile = "$env:windir\System32\drivers\etc\hosts"
 
-Add-Content -Path $hostsFile -Value "`n# Block known Adobe hosts"
-Add-Content -Path $hostsFile -Value "# From: https://github.com/$($BlockListRepository)`n"
+# Add-Content -Path $hostsFile -Value "`n# Block known Adobe hosts"
+# Add-Content -Path $hostsFile -Value "# From: https://github.com/$($BlockListRepository)`n"
 
-foreach ($line in $AdobeIPBlocklist) {
-  if ($line.StartsWith('0.0.0.0')) {
-    Add-Content -Path $hostsFile -Value $line -Force
-  }
-}
+# foreach ($line in $AdobeIPBlocklist) {
+#   if ($line.StartsWith('0.0.0.0')) {
+#     Add-Content -Path $hostsFile -Value $line -Force
+#   }
+# }
