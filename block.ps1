@@ -54,19 +54,19 @@ foreach ($program in $ProgramPaths.GetEnumerator()) {
   Write-Host "Outbound firewall rule: `"$fwDisplayName`" already added!"
 }
 
-$BlockListBaseUrl = "https://raw.githubusercontent.com/Ruddernation-Designs/Adobe-URL-Block-List"
-
 # Get the hosts URL from https://github.com/Ruddernation-Designs/Adobe-URL-Block-List
-$IPBlockListUrl = "$($BlockListBaseUrl)/master/hosts"
+$BlockListRepository = "Ruddernation-Designs/Adobe-URL-Block-List"
+
+$IPBlockListUrl = "https://raw.githubusercontent.com/$($BlockListRepository)/master/hosts"
 $AdobeIPBlocklist = $(Invoke-WebRequest -Uri $IPBlockListUrl).Content -split "[`r`n]"
 
-$hostFile = "$env:windir\System32\drivers\etc\hosts"
+$hostsFile = "$env:windir\System32\drivers\etc\hosts"
 
-Add-Content -Path $hostFile -Value "`n# Block known Adobe hosts"
-Add-Content -Path $hostFile -Value "# From: $($BlockListBaseUrl)`n"
+Add-Content -Path $hostsFile -Value "`n# Block known Adobe hosts"
+Add-Content -Path $hostsFile -Value "# From: https://github.com/$($BlockListRepository)`n"
 
 foreach ($line in $AdobeIPBlocklist) {
   if ($line.StartsWith('0.0.0.0')) {
-    Add-Content -Path $hostFile -Value $line -Force
+    Add-Content -Path $hostsFile -Value $line -Force
   }
 }
