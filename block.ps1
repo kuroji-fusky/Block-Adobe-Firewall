@@ -1,46 +1,72 @@
 #Requires -RunAsAdministrator
 
-# TODO Probably need a fix when someone has a different install location
+param (
+  [string]$baseInstallPath = $env:ProgramFiles,
+  [Parameter(Mandatory = $true)][boolean]$reset_flag
+)
+
 $ProgramPaths = @{
-  "Premiere Pro 2022"  = "Adobe Premiere Pro 2022\Adobe Premiere Pro.exe";
-  "Premiere Pro 2023"  = "Adobe Premiere Pro 2023\Adobe Premiere Pro.exe";
-  "Premiere Pro 2024"  = "Adobe Premiere Pro 2024\Adobe Premiere Pro.exe";
-  "Illustrator 2021"   = "Adobe Illustrator 2021\Support Files\Contents\Windows\Illustrator.exe";
-  "Illustrator 2022"   = "Adobe Illustrator 2022\Support Files\Contents\Windows\Illustrator.exe";
-  "Illustrator 2023"   = "Adobe Illustrator 2023\Support Files\Contents\Windows\Illustrator.exe";
-  "Illustrator 2024"   = "Adobe Illustrator 2024\Support Files\Contents\Windows\Illustrator.exe";
-  "After Effects 2022" = "Adobe After Effects 2022\Support Files\AfterFX.exe";
-  "After Effects 2023" = "Adobe After Effects 2023\Support Files\AfterFX.exe";
-  "After Effects 2024" = "Adobe After Effects 2024\Support Files\AfterFX.exe";
-  "Media Encoder 2022" = "Adobe Media Encoder 2022\Adobe Media Encoder.exe";
-  "Media Encoder 2023" = "Adobe Media Encoder 2023\Adobe Media Encoder.exe";
-  "Media Encoder 2024" = "Adobe Media Encoder 2024\Adobe Media Encoder.exe";
+  # Photoshop
   "Photoshop 2022"     = "Adobe Photoshop 2022\Photoshop.exe";
   "Photoshop 2023"     = "Adobe Photoshop 2023\Photoshop.exe";
   "Photoshop 2024"     = "Adobe Photoshop 2024\Photoshop.exe";
+  
+  # Premiere Pro
+  "Premiere Pro 2022"  = "Adobe Premiere Pro 2022\Adobe Premiere Pro.exe";
+  "Premiere Pro 2023"  = "Adobe Premiere Pro 2023\Adobe Premiere Pro.exe";
+  "Premiere Pro 2024"  = "Adobe Premiere Pro 2024\Adobe Premiere Pro.exe";
+
+  # Illustrator
+  "Illustrator 2022"   = "Adobe Illustrator 2022\Support Files\Contents\Windows\Illustrator.exe";
+  "Illustrator 2023"   = "Adobe Illustrator 2023\Support Files\Contents\Windows\Illustrator.exe";
+  "Illustrator 2024"   = "Adobe Illustrator 2024\Support Files\Contents\Windows\Illustrator.exe";
+
+  # AE
+  "After Effects 2022" = "Adobe After Effects 2022\Support Files\AfterFX.exe";
+  "After Effects 2023" = "Adobe After Effects 2023\Support Files\AfterFX.exe";
+  "After Effects 2024" = "Adobe After Effects 2024\Support Files\AfterFX.exe";
+
+  # Media Encoder
+  "Media Encoder 2022" = "Adobe Media Encoder 2022\Adobe Media Encoder.exe";
+  "Media Encoder 2023" = "Adobe Media Encoder 2023\Adobe Media Encoder.exe";
+  "Media Encoder 2024" = "Adobe Media Encoder 2024\Adobe Media Encoder.exe";
 }
 
 foreach ($program in $ProgramPaths.GetEnumerator()) {
   $programName = $program.Key
-  $programDir = "$($env:ProgramFiles)\Adobe\$($program.Value)"
 
-  New-NetFirewallRule -DisplayName "Block $programName Connection" -Direction Inbound -Action Block -Program $programDir
-  New-NetFirewallRule -DisplayName "Block $programName Connection" -Direction Outbound -Action Block -Program $programDir
+  # TODO Probably need a fix when someone has a different install location
+  $programDir = "$($baseInstallPath)\Adobe\$($program.Value)"
 
-  Write-Host "Blocked $programName from location: $programDir"
+  $fwDisplayName = "Block connections from $programName"
+
+  # Verify if $programDir is valid and it exists; by default this should automatically pass if "$env:ProgramFiles" is set to default
+
+  # Skip if the Firewall rule is already created and to prevent any dups
+  if (!$(Get-NetFirewallRule -DisplayName $fwDisplayName -Direction Inbound)) {
+    New-NetFirewallRule -DisplayName $fwDisplayName -Direction Inbound -Action Block -Program $programDir
+  }
+  Write-Host "Inbound firewall rule: `"$fwDisplayName`" already added!"
+  
+  if (!$(Get-NetFirewallRule -DisplayName $fwDisplayName -Direction Outbound)) {
+    New-NetFirewallRule -DisplayName $fwDisplayName -Direction Outbound -Action Block -Program $programDir
+  }
+  Write-Host "Outbound firewall rule: `"$fwDisplayName`" already added!"
 }
 
+$BlockListBaseUrl = "https://raw.githubusercontent.com/Ruddernation-Designs/Adobe-URL-Block-List"
+
 # Get the hosts URL from https://github.com/Ruddernation-Designs/Adobe-URL-Block-List
-$IPBlockListUrl = "https://raw.githubusercontent.com/Ruddernation-Designs/Adobe-URL-Block-List/master/hosts"
+$IPBlockListUrl = "$($BlockListBaseUrl)/master/hosts"
 $AdobeIPBlocklist = $(Invoke-WebRequest -Uri $IPBlockListUrl).Content -split "[`r`n]"
 
 $hostFile = "$env:windir\System32\drivers\etc\hosts"
 
 Add-Content -Path $hostFile -Value "`n# Block known Adobe hosts"
-Add-Content -Path $hostFile -Value "# From: https://github.com/Ruddernation-Designs/Adobe-URL-Block-List`n"
+Add-Content -Path $hostFile -Value "# From: $($BlockListBaseUrl)`n"
 
 foreach ($line in $AdobeIPBlocklist) {
-  if ($line.StartsWith('127.0.0.1')) {
+  if ($line.StartsWith('0.0.0.0')) {
     Add-Content -Path $hostFile -Value $line -Force
   }
 }
