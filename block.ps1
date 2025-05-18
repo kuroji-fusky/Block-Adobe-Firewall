@@ -44,10 +44,10 @@ $ProgramPaths = @{
 
 foreach ($program in $ProgramPaths.GetEnumerator()) {
   $programName = $program.Key
-  $programDir = "$($BaseInstallPath)\Adobe\$($program.Value)"
+  $programDir = Join-Path $($BaseInstallPath) "Adobe\$($program.Value)"
 
   # Verify if $programDir is valid and it exists; by default this should automatically pass if "$env:ProgramFiles" is set to default
-  if (Test-Path $programDir) {
+  if (!(Test-Path $programDir)) {
     continue
   }
 
@@ -55,14 +55,14 @@ foreach ($program in $ProgramPaths.GetEnumerator()) {
 
   # Skip if the Firewall rule is already created and to prevent any dups
   if (!(Get-NetFirewallRule -DisplayName $fwDisplayName -Direction Inbound)) {
-    New-NetFirewallRule -DisplayName $fwDisplayName -Direction Inbound -Action Block -Program $programDir
+    New-NetFirewallRule -DisplayName $fwDisplayName -Direction Inbound -Action Block -Program $programDir -Profile Any
+    Write-Host "Inbound firewall rule: `"$fwDisplayName`" added"
   }
-  Write-Host "Inbound firewall rule: `"$fwDisplayName`" already added!"
   
   if (!(Get-NetFirewallRule -DisplayName $fwDisplayName -Direction Outbound)) {
-    New-NetFirewallRule -DisplayName $fwDisplayName -Direction Outbound -Action Block -Program $programDir
+    New-NetFirewallRule -DisplayName $fwDisplayName -Direction Outbound -Action Block -Program $programDir -Profile Any
+    Write-Host "Outbound firewall rule: `"$fwDisplayName`" added"
   }
-  Write-Host "Outbound firewall rule: `"$fwDisplayName`" already added!"
 }
 
 # Get the hosts URL from https://github.com/Ruddernation-Designs/Adobe-URL-Block-List
