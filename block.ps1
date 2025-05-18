@@ -12,6 +12,7 @@ param (
   [string]$ResetFlag
 )
 
+# TODO: add a check for scanned exe's
 $ProgramPaths = @{
   # Photoshop
   "Photoshop 2022"     = "Adobe Photoshop 2022\Photoshop.exe";
@@ -42,6 +43,12 @@ $ProgramPaths = @{
   "Media Encoder 2025" = "Adobe Media Encoder 2025\Adobe Media Encoder.exe";
 }
 
+if (!(Test-Path -Path $BaseInstallPath)) {
+  Write-Error "It looks like the base directory doesn't exist.`n"
+  Write-Error "Did you double check the base Adobe path? If you installed it from a different directory or drive, you can overwrite the path with -BaseInstallPath."
+  exit 1
+}
+
 foreach ($program in $ProgramPaths.GetEnumerator()) {
   $programName = $program.Key
   $programDir = Join-Path $($BaseInstallPath) "Adobe\$($program.Value)"
@@ -65,19 +72,27 @@ foreach ($program in $ProgramPaths.GetEnumerator()) {
   }
 }
 
-# Get the hosts URL from https://github.com/Ruddernation-Designs/Adobe-URL-Block-List
-# $BlockListRepository = "Ruddernation-Designs/Adobe-URL-Block-List"
+<# Get the hosts URL from https://github.com/Ruddernation-Designs/Adobe-URL-Block-List #>
+$BlockListRepository = "Ruddernation-Designs/Adobe-URL-Block-List"
 
-# $IPBlockListUrl = "https://raw.githubusercontent.com/$($BlockListRepository)/master/hosts"
-# $AdobeIPBlocklist = $(Invoke-WebRequest -Uri $IPBlockListUrl).Content -split "[`r`n]"
+$IPBlockListUrl = "https://raw.githubusercontent.com/$($BlockListRepository)/master/hosts"
+$hostsFile = "$env:windir\System32\drivers\etc\hosts"
 
-# $hostsFile = "$env:windir\System32\drivers\etc\hosts"
+try {
+  $AdobeIPBlocklist = (Invoke-WebRequest -Uri $IPBlockListUrl).Content -split "[`r`n]"
 
-# Add-Content -Path $hostsFile -Value "`n# Block known Adobe hosts"
-# Add-Content -Path $hostsFile -Value "# From: https://github.com/$($BlockListRepository)`n"
-
-# foreach ($line in $AdobeIPBlocklist) {
-#   if ($line.StartsWith('0.0.0.0')) {
-#     Add-Content -Path $hostsFile -Value $line -Force
-#   }
-# }
+  Add-Content -Path $hostsFile -Value "`n# Block known Adobe hosts`n"
+  Add-Content -Path $hostsFile -Value "# From: https://github.com/$BlockListRepository`n"
+  
+  foreach ($line in $AdobeIPBlocklist) {
+    if ($line -match "^0\.0\.0\.0\s+\S+") {
+      if ($existingHostsContent -notcontains $line) {
+        Add-Content -Path $hostsFile -Value $line
+      }
+    }
+  }
+}
+catch {
+  Write-Error "Failed to fetch contents: $_"
+  exit 1
+}
