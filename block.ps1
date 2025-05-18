@@ -1,4 +1,8 @@
-#Requires -RunAsAdministrator
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole("Administrator")) {
+  Write-Error "Please re-run this script as administrator for this to work."
+  Write-Error "`nAdding firewall rules requires elevated privilages."
+  exit 1
+}
 
 param (
   [string]$BaseInstallPath = $env:ProgramFiles,
@@ -23,16 +27,19 @@ $ProgramPaths = @{
   "Illustrator 2022"   = "Adobe Illustrator 2022\Support Files\Contents\Windows\Illustrator.exe";
   "Illustrator 2023"   = "Adobe Illustrator 2023\Support Files\Contents\Windows\Illustrator.exe";
   "Illustrator 2024"   = "Adobe Illustrator 2024\Support Files\Contents\Windows\Illustrator.exe";
+  "Illustrator 2025"   = "Adobe Illustrator 2025\Support Files\Contents\Windows\Illustrator.exe";
 
   # AE
   "After Effects 2022" = "Adobe After Effects 2022\Support Files\AfterFX.exe";
   "After Effects 2023" = "Adobe After Effects 2023\Support Files\AfterFX.exe";
   "After Effects 2024" = "Adobe After Effects 2024\Support Files\AfterFX.exe";
+  "After Effects 2025" = "Adobe After Effects 2025\Support Files\AfterFX.exe";
 
   # Media Encoder
   "Media Encoder 2022" = "Adobe Media Encoder 2022\Adobe Media Encoder.exe";
   "Media Encoder 2023" = "Adobe Media Encoder 2023\Adobe Media Encoder.exe";
   "Media Encoder 2024" = "Adobe Media Encoder 2024\Adobe Media Encoder.exe";
+  "Media Encoder 2025" = "Adobe Media Encoder 2025\Adobe Media Encoder.exe";
 }
 
 foreach ($program in $ProgramPaths.GetEnumerator()) {
