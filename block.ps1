@@ -81,7 +81,7 @@ $hostsFile = "$env:windir\System32\drivers\etc\hosts"
 try {
   $AdobeIPBlocklist = (Invoke-WebRequest -Uri $IPBlockListUrl).Content -split "[`r`n]"
 
-  Add-Content -Path $hostsFile -Value "`n# Block known Adobe hosts`n"
+  Add-Content -Path $hostsFile -Value "`n# Block known Adobe hosts"
   Add-Content -Path $hostsFile -Value "# From: https://github.com/$BlockListRepository`n"
   
   foreach ($line in $AdobeIPBlocklist) {
