@@ -1,9 +1,3 @@
-if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole("Administrator")) {
-  Write-Error "Please re-run this script as administrator for this to work."
-  Write-Error "`nAdding firewall rules requires elevated privilages."
-  exit 1
-}
-
 param (
   [string]$BaseInstallPath = $env:ProgramFiles,
 
@@ -11,6 +5,12 @@ param (
   [ValidateSet("All", "Firewall", "Rules")]
   [string]$ResetFlag
 )
+
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole("Administrator")) {
+  Write-Error "Please re-run this script as administrator for this to work."
+  Write-Error "`nAdding firewall rules requires elevated privilages."
+  exit 1
+}
 
 # TODO: add a check for scanned exe's
 $ProgramPaths = @{
