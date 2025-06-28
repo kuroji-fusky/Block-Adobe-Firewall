@@ -14,6 +14,9 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 
 # TODO: add a check for scanned exe's
 $ProgramPaths = @{
+  "Acrobat DC"         = "Acrobat DC\Acrobat.exe";
+  "Acrobat Reader DC"  = "Acrobat Reader DC\Reader\AcroRd32.exe";
+
   # Photoshop
   "Photoshop 2022"     = "Adobe Photoshop 2022\Photoshop.exe";
   "Photoshop 2023"     = "Adobe Photoshop 2023\Photoshop.exe";
